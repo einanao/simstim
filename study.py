@@ -3,6 +3,7 @@ import time
 import sys
 import json
 import os
+import argparse
 
 import numpy as np
 import pygame
@@ -40,17 +41,17 @@ class CthulhuGrid(object):
 
   N_CHANNELS = 18
 
-  def __init__(self, shield, display, scale=20, radius=10, log_path=None):
+  def __init__(self, shield, display, scale=20, radius=10, log_dir=LOG_DIR, exp_name=None):
     assert shield.N_CHANNELS == self.N_CHANNELS
 
-    if log_path is None:
+    if exp_name is None:
       timestamp = get_current_iso_time()
-      log_path = os.path.join(LOG_DIR, '%s.json' % timestamp)
+      exp_name = '%s.json' % timestamp
 
     self.shield = shield
     self.display = display
     self.radius = radius
-    self.log_path = log_path
+    self.log_path = os.path.join(log_dir, '%s.json' % timestamp)
 
     ys = np.arange(0, self.N_CHANNELS, 1) // 4
     xs = np.concatenate((np.tile(np.arange(0, 4, 1), 4), [1, 2]))
@@ -127,9 +128,15 @@ class CthulhuGrid(object):
       print('n_resets: %d' % self.n_resets)
 
 
+parser = argparse.ArgumentParser()
+parser.add_argument('--debug_mode', action='store_true')
+parser.add_argument('--log_dir', type=str, default=LOG_DIR)
+parser.add_argument('--exp_name', type=str, default=None)
 def main():
-  if not os.path.exists(LOG_DIR):
-    os.makedirs(LOG_DIR)
+  args = parser.parse_args()
+
+  if not os.path.exists(args.log_dir):
+    os.makedirs(args.log_dir)
 
   pygame.init()
 
@@ -139,9 +146,9 @@ def main():
   display = pygame.display.set_mode((100,125))
   display.fill(WHITE)
 
-  shield = CthulhuShield()
+  shield = CthulhuShield(debug_mode=args.debug_mode)
   shield.stop()
-  grid = CthulhuGrid(shield, display)
+  grid = CthulhuGrid(shield, display, log_dir=args.log_dir, exp_name=args.exp_name)
   grid.reset()
   while True:
     grid.render()

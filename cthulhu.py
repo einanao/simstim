@@ -12,19 +12,22 @@ class CthulhuShield(object):
          1,  2
   ]
 
-  def __init__(self, port='/dev/tty.usbmodem114401'):
-    self.ard = serial.Serial(port, 9600, timeout=5)
-    self.ard.flush()
+  def __init__(self, port='/dev/tty.usbmodem114401', debug_mode=False):
+    self.debug_mode = debug_mode
+    if not self.debug_mode:
+      self.ard = serial.Serial(port, 9600, timeout=5)
+      self.ard.flush()
 
   def stim(self, idxes):
-    packet = bytearray()
-    if idxes == []:
+    if not self.debug_mode:
+      packet = bytearray()
+      if idxes == []:
+        packet.append(0)
+      else:
+        for i in idxes:
+          packet.append(self.REMAP[i])
       packet.append(0)
-    else:
-      for i in idxes:
-        packet.append(self.REMAP[i])
-    packet.append(0)
-    self.ard.write(packet)
+      self.ard.write(packet)
 
   def stop(self):
     self.stim([])
