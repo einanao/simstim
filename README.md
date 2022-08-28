@@ -7,6 +7,7 @@
 2. Go to the [Cthulhu GitHub repo](https://github.com/SapienLLCdev/Cthulhu) and [download ZIP](https://github.com/SapienLLCdev/Cthulhu/archive/refs/heads/master.zip)
 3. Open the Arduino IDE, go to `Sketch > Include Library > Add .ZIP Library`, and select the `.zip` file downloaded in the previous step
 4. Setup [Anaconda](https://www.anaconda.com/products/distribution) environment with `conda env create -f environment.yml`
+5. Set the default `port` value in `simstim/cthulhu.py`. If you don't know the port, make sure the Arduino is connected to your computer and run `ls -lha /dev/tty*` (it will probably look like `/dev/tty.usbmodem`).
 
 ## Usage
 1. In the Arduino IDE, open `File > Examples > Cthulhu-master > SerialInput` and run the program
