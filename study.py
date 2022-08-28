@@ -8,7 +8,7 @@ import numpy as np
 import pygame
 from pygame.locals import *
 
-from cthulhu import Cthulhu
+from cthulhu import CthulhuShield
 
 
 LOG_DIR = 'logs'
@@ -40,20 +40,20 @@ class CthulhuGrid(object):
 
   N_CHANNELS = 18
 
-  def __init__(self, cthulhu, display, scale=20, radius=10, log_path=None):
-    assert cthulhu.N_CHANNELS == self.N_CHANNELS
+  def __init__(self, shield, display, scale=20, radius=10, log_path=None):
+    assert shield.N_CHANNELS == self.N_CHANNELS
 
     if log_path is None:
       timestamp = get_current_iso_time()
       log_path = os.path.join(LOG_DIR, '%s.json' % timestamp)
 
-    self.cthulhu = cthulhu
+    self.shield = shield
     self.display = display
     self.radius = radius
     self.log_path = log_path
 
-    ys = np.arange(0, 18, 1) // 4
-    xs = np.concatenate((np.tile(np.arange(0, 4, 1), 4), np.arange(1, 3, 1)))
+    ys = np.arange(0, self.N_CHANNELS, 1) // 4
+    xs = np.concatenate((np.tile(np.arange(0, 4, 1), 4), [1, 2]))
     self.poses = np.concatenate((xs[:, np.newaxis], ys[:, np.newaxis]), axis=1)
     self.poses *= scale
     self.poses += scale
@@ -83,7 +83,7 @@ class CthulhuGrid(object):
     with open(self.log_path, 'w') as f:
       json.dump(self.log, f, cls=NumpyJSONEncoder)
 
-  def append_to_log(self, event):
+  def record(self, event):
     event['timestamp'] = time.time()
     self.log.append(event)
     self.save()
@@ -91,7 +91,7 @@ class CthulhuGrid(object):
 
   def toggle(self, idx):
     self.states[idx] = not self.states[idx]
-    self.append_to_log({'name': 'toggle', 'idx': idx})
+    self.record({'name': 'toggle', 'idx': idx})
 
   def click(self, pos):
     pos = np.array(pos)
@@ -105,19 +105,24 @@ class CthulhuGrid(object):
   def submit(self):
     if not self.reveal:
       self.reveal = True
-      self.append_to_log({'name': 'submit'})
+      self.record({'name': 'submit'})
 
   def sample(self):
-    return np.random.random(len(self.states)) < 0.5
+    n = len(self.states)
+    k = np.random.choice(list(range(1, 1+n)))
+    pattern = np.zeros(n).astype(bool)
+    pattern[:k] = True
+    np.random.shuffle(pattern)
+    return pattern
 
   def reset(self):
     if self.reveal:
       self.states = np.zeros(self.N_CHANNELS).astype(bool)
       self.reveal = False
       self.pattern = self.sample()
-      on_idxes = np.where(self.pattern)
-      self.cthulhu.stim(on_idxes)
-      self.append_to_log({'name': 'reset', 'pattern': self.pattern, 'states': self.states})
+      on_idxes = np.where(self.pattern)[0]
+      self.shield.stim(on_idxes)
+      self.record({'name': 'reset', 'pattern': self.pattern, 'states': self.states})
       self.n_resets += 1
       print('n_resets: %d' % self.n_resets)
 
@@ -134,8 +139,9 @@ def main():
   display = pygame.display.set_mode((100,125))
   display.fill(WHITE)
 
-  cthulhu = Cthulhu()
-  grid = CthulhuGrid(cthulhu, display)
+  shield = CthulhuShield()
+  shield.stop()
+  grid = CthulhuGrid(shield, display)
   grid.reset()
   while True:
     grid.render()
@@ -150,6 +156,7 @@ def main():
           grid.reset()
       elif event.type == QUIT:
         grid.save()
+        shield.stop()
         pygame.quit()
         sys.exit()
 

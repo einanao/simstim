@@ -1,6 +1,6 @@
 import serial
 
-class Cthulhu(object):
+class CthulhuShield(object):
 
   N_CHANNELS = 18
 
@@ -12,7 +12,7 @@ class Cthulhu(object):
          1,  2
   ]
 
-  def __init__(self, port='/dev/tty.usbmodem1464401'):
+  def __init__(self, port='/dev/tty.usbmodem114401'):
     self.ard = serial.Serial(port, 9600, timeout=5)
     self.ard.flush()
 
