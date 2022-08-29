@@ -4,6 +4,7 @@ import sys
 import json
 import os
 import argparse
+from copy import deepcopy
 
 import numpy as np
 import pygame
@@ -86,7 +87,7 @@ class CthulhuGrid(object):
 
   def record(self, event):
     event['timestamp'] = time.time()
-    self.log.append(event)
+    self.log.append(deepcopy(event))
     self.save()
     print(event)
 
@@ -110,11 +111,14 @@ class CthulhuGrid(object):
 
   def sample(self):
     n = len(self.states)
-    k = np.random.choice(list(range(1, 1+n)))
-    pattern = np.zeros(n).astype(bool)
-    pattern[:k] = True
-    np.random.shuffle(pattern)
-    return pattern
+    if np.random.random() < 0.5:
+      return np.random.random(n) < 0.5
+    else:
+      k = np.random.choice(list(range(1, 1+n)))
+      pattern = np.zeros(n).astype(bool)
+      pattern[:k] = True
+      np.random.shuffle(pattern)
+      return pattern
 
   def reset(self):
     if self.reveal:
@@ -124,8 +128,8 @@ class CthulhuGrid(object):
       on_idxes = np.where(self.pattern)[0]
       self.shield.stim(on_idxes)
       self.record({'name': 'reset', 'pattern': self.pattern, 'states': self.states})
+      print('completed: %d' % self.n_resets)
       self.n_resets += 1
-      print('n_resets: %d' % self.n_resets)
 
 
 parser = argparse.ArgumentParser()
