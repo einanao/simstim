@@ -14,7 +14,7 @@ class CthulhuShield(object):
          1,  2
   ]
 
-  def __init__(self, port='/dev/tty.usbmodem114401', debug_mode=False, conn_delay=1):
+  def __init__(self, port='/dev/tty.usbmodem114401', debug_mode=False, conn_delay=3):
     self.debug_mode = debug_mode
     if not self.debug_mode:
       self.ard = serial.Serial(port, 9600, timeout=5)
